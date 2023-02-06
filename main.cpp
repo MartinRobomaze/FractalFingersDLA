@@ -2,7 +2,6 @@
 #include <cmath>
 #include <random>
 #include <fstream>
-#include "opencv2/opencv.hpp"
 #include "point.h"
 #include "convex_hull.h"
 
