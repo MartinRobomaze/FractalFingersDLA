@@ -9,15 +9,16 @@
 
 using namespace std;
 
-double points_dist(Point p1, Point p2) {
-    return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
+double points_dist_sq(Point p1, Point p2) {
+    return pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2);
 }
 
 int n_points_in_circle(vector<Point> &cluster, Point center, double r) {
     int n_points = 0;
+    double r_squared = pow(r, 2);
 
     for (auto p : cluster) {
-        if (points_dist(p, center) <= r) {
+        if (points_dist_sq(p, center) <= r_squared) {
             n_points++;
         }
     }
@@ -68,13 +69,14 @@ int main(int argc, char *argv[]) {
 
     // Initialize the cluster with a single particle at the center
     vector<Point> cluster;
-    for (int i = 0; i < num_initial_particles; i++) {
-        double angle = 2 * M_PI / num_initial_particles * i;
-        double x = R_initial * cos(angle);
-        double y = R_initial * sin(angle);
-
-        cluster.push_back(Point{x, y});
-    }
+//    for (int i = 0; i < num_initial_particles; i++) {
+//        double angle = 2 * M_PI / num_initial_particles * i;
+//        double x = R_initial * cos(angle);
+//        double y = R_initial * sin(angle);
+//
+//        cluster.push_back(Point{x, y});
+//    }
+    cluster.push_back(Point{0, 0});
 
     // Set the number of particles and the maximum distance
 
@@ -83,10 +85,10 @@ int main(int argc, char *argv[]) {
     bool wrote_already = false;
     // Generate the particles
     for (int i = 0; i < num_simulated_particles; i++) {
-        if (i % 10 == 0 && !wrote_already) {
+        if (i % 100 == 0 && !wrote_already) {
             cout << i << endl;
             wrote_already = true;
-        } else if (i % 10 != 0) {
+        } else if (i % 100 != 0) {
             wrote_already = false;
         }
         pair<double, pair<double, double>> cluster_R = cluster_radius(cluster);
@@ -111,14 +113,6 @@ int main(int argc, char *argv[]) {
             x += (distrib(mt) - 0.5);
             y += (distrib(mt) - 0.5);
 
-            double sticking_probability =
-                    A * ((double)(n_points_in_circle(cluster, Point{x, y}, R_diff_circle)) /
-                    (M_PI * pow(R_diff_circle, 2)) - N_0) + B;
-
-            if (sticking_probability < 0.01) {
-                sticking_probability = 0.01;
-            }
-
 //            cout << n_points_in_circle(cluster, Point{x, y}, R_diff_circle) << " " << sticking_probability << " " << N_0 << endl;
 
             double diff_circle_dist_sq = pow(x - x_diff_circle, 2) + pow(y - y_diff_circle, 2);
@@ -140,12 +134,17 @@ int main(int argc, char *argv[]) {
                 double dy = y - c.y;
                 double dist_sq = dx * dx + dy * dy;
                 if (dist_sq < 1) {
+                    double sticking_probability =
+                            A * ((double)(n_points_in_circle(cluster, Point{x, y}, R_diff_circle)) /
+                                 (M_PI * pow(R_diff_circle, 2)) - N_0) + B;
+
+                    if (sticking_probability < 0.01) {
+                        sticking_probability = 0.01;
+                    }
+
                     if (distrib(mt) <= sticking_probability) {
                         alive = false;
 
-//                        double dist = sqrt(dist_sq);
-
-                        // Move particle next to other particle.
                         x = c.x + dx;
                         y = c.y + dy;
 
